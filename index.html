@@ -1,0 +1,2941 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LinguaBoost — учим слова</title>
+    <style>
+        /* ----- Базовые стили (сохранены из предыдущей версии) ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(145deg, #f0f4ff 0%, #e8edf7 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 720px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 36px;
+            padding: 28px 26px 34px;
+            box-shadow: 0 20px 60px rgba(58, 80, 120, 0.15), 0 8px 24px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .app-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .app-title h1 {
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1a2a6c, #3a6ea5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.3px;
+        }
+
+        .app-title .emoji {
+            font-size: 28px;
+            -webkit-text-fill-color: initial;
+        }
+
+        .word-count {
+            background: rgba(58, 110, 165, 0.12);
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a2a6c;
+            border: 1px solid rgba(58, 110, 165, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            white-space: nowrap;
+        }
+
+        .word-count span {
+            font-weight: 700;
+            color: #1a2a6c;
+        }
+
+        .save-status {
+            font-size: 13px;
+            font-weight: 400;
+            color: #27ae60;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: inline-block;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .save-status.show {
+            opacity: 1;
+        }
+
+        /* ----- Вкладки ----- */
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(58, 110, 165, 0.12);
+            padding-bottom: 2px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #7a8fa5;
+            cursor: pointer;
+            border-radius: 30px 30px 0 0;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: #1a2a6c;
+            background: rgba(58, 110, 165, 0.06);
+        }
+
+        .tab-btn.active {
+            color: #1a2a6c;
+            background: rgba(58, 110, 165, 0.10);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 20%;
+            width: 60%;
+            height: 3px;
+            background: linear-gradient(90deg, #1a2a6c, #3a6ea5);
+            border-radius: 10px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ----- Поля ввода (словарь) ----- */
+        .input-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .input-wrapper {
+            flex: 1 1 calc(50% - 6px);
+            min-width: 140px;
+            position: relative;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #dce3ef;
+            border-radius: 20px;
+            font-size: 15px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(4px);
+            transition: all 0.25s ease;
+            outline: none;
+            color: #1a2a3a;
+            font-weight: 500;
+        }
+
+        .input-wrapper input::placeholder {
+            color: #9aabbf;
+            font-weight: 400;
+        }
+
+        .input-wrapper input:focus {
+            border-color: #3a6ea5;
+            box-shadow: 0 0 0 4px rgba(58, 110, 165, 0.15);
+            background: #ffffff;
+        }
+
+        .input-wrapper input.duplicate {
+            border-color: #e74c3c;
+            box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.12);
+            background: #fff6f5;
+        }
+
+        .input-wrapper input.success {
+            border-color: #27ae60;
+            box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.12);
+            background: #f5fff9;
+        }
+
+        .input-wrapper label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #5a7a9a;
+            margin-bottom: 4px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .btn-add {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #1a2a6c, #3a6ea5);
+            border: none;
+            border-radius: 20px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 16px rgba(58, 110, 165, 0.30);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            align-self: flex-end;
+            margin-bottom: 2px;
+            flex: 1 1 100%;
+            justify-content: center;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(58, 110, 165, 0.40);
+        }
+
+        .btn-add:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 12px rgba(58, 110, 165, 0.25);
+        }
+
+        .btn-add:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ----- Сообщение ----- */
+        .message {
+            min-height: 38px;
+            margin-top: 12px;
+            padding: 8px 16px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(-6px);
+            pointer-events: none;
+        }
+
+        .message.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .message.success {
+            background: #e8f8ef;
+            color: #1a7a42;
+            border: 1px solid #b8e6cf;
+        }
+
+        .message.error {
+            background: #fdeaea;
+            color: #b03a2e;
+            border: 1px solid #f5c8c8;
+        }
+
+        .message.info {
+            background: #e9f0fa;
+            color: #1a4a7a;
+            border: 1px solid #c5d8ed;
+        }
+
+        .message .icon {
+            font-size: 18px;
+        }
+
+        /* ----- Список слов ----- */
+        .word-list-section {
+            margin-top: 20px;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(58, 110, 165, 0.08);
+        }
+
+        .list-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a2a3a;
+            letter-spacing: -0.2px;
+            margin-right: auto;
+        }
+
+        .word-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 340px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .word-list::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .word-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.04);
+            border-radius: 10px;
+        }
+
+        .word-list::-webkit-scrollbar-thumb {
+            background: rgba(58, 110, 165, 0.25);
+            border-radius: 10px;
+        }
+
+        .word-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(4px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            transition: all 0.2s ease;
+            animation: slideIn 0.3s ease;
+            gap: 8px;
+            flex-wrap: wrap;
+            cursor: default;
+        }
+
+        .word-item:hover {
+            background: #ffffff;
+            box-shadow: 0 4px 16px rgba(58, 110, 165, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .word-item .word-pair {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            flex-wrap: wrap;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .word-item .word-pair:hover {
+            opacity: 0.8;
+        }
+
+        .word-item .word-original {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1a2a3a;
+        }
+
+        .word-item .word-translation {
+            font-size: 15px;
+            font-weight: 400;
+            color: #4a6a8a;
+            background: rgba(58, 110, 165, 0.08);
+            padding: 2px 12px;
+            border-radius: 30px;
+            border: 1px solid rgba(58, 110, 165, 0.08);
+        }
+
+        .word-item .word-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .word-item .learned-btn {
+            background: none;
+            border: 2px solid #dce3ef;
+            border-radius: 30px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #5a7a9a;
+            white-space: nowrap;
+        }
+
+        .word-item .learned-btn:hover {
+            border-color: #3a6ea5;
+            background: rgba(58, 110, 165, 0.06);
+        }
+
+        .word-item .learned-btn.active {
+            border-color: #27ae60;
+            background: #e8f8ef;
+            color: #1a7a42;
+        }
+
+        .word-item .edit-btn {
+            background: none;
+            border: none;
+            color: #9aabbf;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            line-height: 1;
+        }
+
+        .word-item .edit-btn:hover {
+            color: #3a6ea5;
+            background: rgba(58, 110, 165, 0.08);
+            transform: scale(1.1);
+        }
+
+        .word-item .delete-btn {
+            background: none;
+            border: none;
+            color: #bcc9db;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            line-height: 1;
+        }
+
+        .word-item .delete-btn:hover {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.08);
+            transform: scale(1.1);
+        }
+
+        .word-item .delete-btn:active {
+            transform: scale(0.9);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px 32px;
+            color: #9aabbf;
+        }
+
+        .empty-state .big-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .empty-state p {
+            font-size: 15px;
+            font-weight: 400;
+        }
+
+        .empty-state .sub {
+            font-size: 13px;
+            color: #bcc9db;
+            margin-top: 4px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ----- Анимации ----- */
+        @keyframes slideIn {
+            0% {
+                opacity: 0;
+                transform: translateY(12px) scale(0.97);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes shake {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+            20% {
+                transform: translateX(-10px);
+            }
+            40% {
+                transform: translateX(10px);
+            }
+            60% {
+                transform: translateX(-6px);
+            }
+            80% {
+                transform: translateX(6px);
+            }
+        }
+
+        .shake {
+            animation: shake 0.4s ease;
+        }
+
+        /* ===== МОДАЛЬНЫЕ ОКНА ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.25s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.hidden {
+            display: none;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            border-radius: 32px;
+            max-width: 480px;
+            width: 100%;
+            padding: 32px 30px 28px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            0% {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #9aabbf;
+            cursor: pointer;
+            transition: all 0.2s;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: #1a2a3a;
+            transform: rotate(90deg);
+        }
+
+        .modal-word {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a2a3a;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-word .speak-btn {
+            background: none;
+            border: none;
+            font-size: 26px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 50%;
+            transition: all 0.2s;
+            color: #3a6ea5;
+        }
+
+        .modal-word .speak-btn:hover {
+            background: rgba(58, 110, 165, 0.10);
+            transform: scale(1.1);
+        }
+
+        .modal-transcription {
+            font-size: 18px;
+            color: #5a7a9a;
+            margin-bottom: 8px;
+            font-weight: 400;
+        }
+
+        .modal-translation {
+            font-size: 22px;
+            font-weight: 500;
+            color: #1a2a6c;
+            padding: 12px 16px;
+            background: #f0f4ff;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+
+        .modal-example {
+            font-size: 16px;
+            color: #2a3a4a;
+            background: #f8fafc;
+            padding: 16px 18px;
+            border-radius: 16px;
+            border-left: 4px solid #3a6ea5;
+            font-style: italic;
+        }
+
+        .modal-example .label {
+            font-weight: 600;
+            color: #5a7a9a;
+            font-style: normal;
+            display: block;
+            margin-bottom: 4px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-example .text {
+            font-style: italic;
+        }
+
+        /* ----- Модальное окно редактирования ----- */
+        .edit-modal .modal-card {
+            max-width: 440px;
+        }
+
+        .edit-modal .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a2a3a;
+            margin-bottom: 20px;
+        }
+
+        .edit-modal .edit-field {
+            margin-bottom: 16px;
+        }
+
+        .edit-modal .edit-field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #5a7a9a;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .edit-modal .edit-field input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #dce3ef;
+            border-radius: 16px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.2s;
+            color: #1a2a3a;
+        }
+
+        .edit-modal .edit-field input:focus {
+            border-color: #3a6ea5;
+            box-shadow: 0 0 0 4px rgba(58, 110, 165, 0.12);
+        }
+
+        .edit-modal .edit-field input.duplicate {
+            border-color: #e74c3c;
+            box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.12);
+        }
+
+        .edit-modal .edit-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .edit-modal .edit-actions button {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .edit-modal .edit-actions .btn-cancel {
+            background: #eef2f7;
+            color: #4a6a8a;
+        }
+
+        .edit-modal .edit-actions .btn-cancel:hover {
+            background: #dce3ef;
+        }
+
+        .edit-modal .edit-actions .btn-save {
+            background: linear-gradient(135deg, #1a2a6c, #3a6ea5);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(26, 42, 108, 0.25);
+        }
+
+        .edit-modal .edit-actions .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 42, 108, 0.35);
+        }
+
+        .edit-modal .edit-error {
+            color: #e74c3c;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 8px;
+            min-height: 24px;
+        }
+
+        /* ----- Стили для изучения ----- */
+        .study-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .study-mode-btn {
+            padding: 10px 20px;
+            border: 2px solid #dce3ef;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a6a8a;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .study-mode-btn:hover {
+            border-color: #3a6ea5;
+            background: rgba(58, 110, 165, 0.06);
+        }
+
+        .study-mode-btn.active {
+            border-color: #1a2a6c;
+            background: rgba(58, 110, 165, 0.12);
+            color: #1a2a6c;
+            box-shadow: 0 0 0 3px rgba(58, 110, 165, 0.08);
+        }
+
+        .study-area {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 24px;
+            padding: 24px 20px;
+            min-height: 240px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(4px);
+        }
+
+        .study-area .study-placeholder {
+            text-align: center;
+            color: #9aabbf;
+            padding: 30px 0;
+            font-size: 16px;
+        }
+
+        .match-container {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .match-column {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .match-column h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #5a7a9a;
+            margin-bottom: 12px;
+            text-align: center;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .match-item {
+            padding: 10px 16px;
+            margin-bottom: 8px;
+            background: #ffffff;
+            border-radius: 14px;
+            border: 2px solid #eef2f7;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        .match-item:hover {
+            border-color: #b0c8e0;
+            transform: translateY(-1px);
+        }
+
+        .match-item.selected {
+            border-color: #1a2a6c;
+            background: #e9f0fa;
+            box-shadow: 0 0 0 3px rgba(58, 110, 165, 0.15);
+        }
+
+        .match-item.matched {
+            border-color: #27ae60;
+            background: #e8f8ef;
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        .match-item.wrong {
+            border-color: #e74c3c;
+            background: #fdeaea;
+            animation: shake 0.3s ease;
+        }
+
+        .match-score {
+            text-align: center;
+            margin-top: 16px;
+            font-weight: 600;
+            color: #1a2a6c;
+        }
+
+        .write-container {
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .write-container .prompt {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1a2a3a;
+            margin-bottom: 16px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 20px;
+            border: 1px solid #eef2f7;
+        }
+
+        .write-container .prompt small {
+            display: block;
+            font-size: 14px;
+            font-weight: 400;
+            color: #8a9fb0;
+            margin-top: 6px;
+        }
+
+        .write-container input {
+            padding: 14px 20px;
+            width: 100%;
+            border: 2px solid #dce3ef;
+            border-radius: 20px;
+            font-size: 18px;
+            text-align: center;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .write-container input:focus {
+            border-color: #3a6ea5;
+            box-shadow: 0 0 0 4px rgba(58, 110, 165, 0.12);
+        }
+
+        .write-container input.correct {
+            border-color: #27ae60;
+            background: #f5fff9;
+        }
+
+        .write-container input.wrong {
+            border-color: #e74c3c;
+            background: #fff6f5;
+            animation: shake 0.3s ease;
+        }
+
+        .write-container input.prefix-ok {
+            border-color: #f1c40f;
+            background: #fffde7;
+        }
+
+        .write-container .write-feedback {
+            margin-top: 12px;
+            font-weight: 500;
+            min-height: 28px;
+        }
+
+        .build-container {
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .build-container .build-prompt {
+            font-size: 18px;
+            font-weight: 500;
+            color: #4a6a8a;
+            margin-bottom: 6px;
+        }
+
+        .build-container .build-translation {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1a2a6c;
+            margin-bottom: 12px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 16px;
+            border: 1px dashed #b0c8e0;
+        }
+
+        .build-tiles {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 16px 0;
+        }
+
+        .build-tile {
+            width: 50px;
+            height: 50px;
+            background: #ffffff;
+            border: 2px solid #dce3ef;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a2a3a;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            user-select: none;
+        }
+
+        .build-tile:hover {
+            transform: scale(1.05);
+            border-color: #3a6ea5;
+        }
+
+        .build-tile:active {
+            transform: scale(0.95);
+        }
+
+        .build-tile.placed {
+            background: #e9f0fa;
+            border-color: #3a6ea5;
+            cursor: default;
+            opacity: 0.6;
+        }
+
+        .build-tile.correct {
+            background: #e8f8ef;
+            border-color: #27ae60;
+        }
+
+        .build-tile.wrong {
+            background: #fdeaea;
+            border-color: #e74c3c;
+            animation: shake 0.3s ease;
+        }
+
+        .build-tile.prefix-ok {
+            border-color: #f1c40f;
+            background: #fffde7;
+        }
+
+        .build-current {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a2a6c;
+            letter-spacing: 4px;
+            min-height: 50px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 20px;
+            border: 2px dashed #b0c8e0;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        .build-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .build-controls button {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .build-controls .btn-reset {
+            background: #eef2f7;
+            color: #4a6a8a;
+        }
+
+        .build-controls .btn-reset:hover {
+            background: #dce3ef;
+        }
+
+        .build-feedback {
+            margin-top: 12px;
+            font-weight: 500;
+            min-height: 28px;
+        }
+
+        .study-progress {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: #5a7a9a;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .study-progress .score {
+            font-weight: 700;
+            color: #1a2a6c;
+        }
+
+        .study-progress .reset-study {
+            background: none;
+            border: none;
+            color: #9aabbf;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 4px 12px;
+            border-radius: 30px;
+            transition: all 0.2s;
+        }
+
+        .study-progress .reset-study:hover {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.08);
+        }
+
+        .study-progress .mode-label {
+            background: rgba(58, 110, 165, 0.10);
+            padding: 2px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a2a6c;
+        }
+
+        .study-progress .skip-btn {
+            background: none;
+            border: 2px solid #dce3ef;
+            border-radius: 30px;
+            padding: 4px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #5a7a9a;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .study-progress .skip-btn:hover {
+            border-color: #e67e22;
+            color: #e67e22;
+            background: rgba(230, 126, 34, 0.06);
+        }
+
+        /* ----- Адаптивность ----- */
+        @media (max-width: 600px) {
+            .app-container {
+                padding: 20px 16px 26px;
+                border-radius: 28px;
+            }
+            .input-section .input-wrapper {
+                flex: 1 1 100%;
+            }
+            .btn-add {
+                flex: 1 1 100%;
+            }
+            .word-item {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .word-item .word-pair {
+                gap: 8px;
+                flex: 1 1 100%;
+            }
+            .word-item .word-actions {
+                flex: 1 1 100%;
+                justify-content: flex-end;
+            }
+            .word-item .word-original {
+                font-size: 16px;
+            }
+            .word-item .word-translation {
+                font-size: 14px;
+            }
+            .list-header h2 {
+                font-size: 16px;
+            }
+            .word-count {
+                font-size: 12px;
+                padding: 4px 12px;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            .save-status {
+                font-size: 11px;
+                min-width: 60px;
+            }
+            .study-mode-btn {
+                min-width: 70px;
+                font-size: 12px;
+                padding: 8px 12px;
+                flex: 1 1 40%;
+            }
+            .match-container {
+                flex-direction: column;
+                gap: 16px;
+            }
+            .build-tile {
+                width: 44px;
+                height: 44px;
+                font-size: 20px;
+            }
+            .write-container .prompt {
+                font-size: 18px;
+            }
+            .study-progress {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .modal-card {
+                padding: 24px 20px;
+            }
+            .modal-word {
+                font-size: 26px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .app-title h1 {
+                font-size: 20px;
+            }
+            .app-title .emoji {
+                font-size: 24px;
+            }
+            .tab-btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- Шапка -->
+        <header class="app-header">
+            <div class="app-title">
+                <span class="emoji">📚</span>
+                <h1>LinguaBoost</h1>
+            </div>
+            <div class="word-count" id="wordCount">
+                Слов: <span id="countDisplay">0</span>
+                <span class="save-status" id="saveStatus">💾 Сохранено</span>
+            </div>
+        </header>
+
+        <!-- Вкладки -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="dictionary">📖 Словарь</button>
+            <button class="tab-btn" data-tab="study">🧠 Изучение</button>
+        </div>
+
+        <!-- ----- Вкладка Словарь ----- -->
+        <div class="tab-content active" id="tabDictionary">
+            <div class="input-section">
+                <div class="input-wrapper">
+                    <label for="wordInput">Слово (оригинал)</label>
+                    <input
+                    type="text"
+                    id="wordInput"
+                    placeholder="например, apple"
+                    autofocus
+                    />
+                </div>
+                <div class="input-wrapper">
+                    <label for="translationInput">Перевод</label>
+                    <input
+                    type="text"
+                    id="translationInput"
+                    placeholder="например, яблоко"
+                    />
+                </div>
+                <button class="btn-add" id="addBtn">
+                    <span>➕</span> Добавить
+                </button>
+            </div>
+
+            <!-- Сообщение -->
+            <div class="message" id="message">
+                <span class="icon"></span>
+                <span class="text"></span>
+            </div>
+
+            <!-- Список слов -->
+            <section class="word-list-section">
+                <div class="list-header">
+                    <h2>📖 Ваш словарь</h2>
+                </div>
+
+                <ul class="word-list" id="wordList">
+                    <!-- Слова будут добавляться сюда -->
+                </ul>
+
+                <!-- Пустое состояние -->
+                <div class="empty-state" id="emptyState">
+                    <span class="big-icon">🌱</span>
+                    <p>Словарь пока пуст</p>
+                    <div class="sub">Добавьте первую пару «слово → перевод»</div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ----- Вкладка Изучение ----- -->
+        <div class="tab-content" id="tabStudy">
+            <div class="study-controls">
+                <button class="study-mode-btn active" data-mode="match">🔗 Сопоставить</button>
+                <button class="study-mode-btn" data-mode="write">✍️ Написать</button>
+                <button class="study-mode-btn" data-mode="build">🧩 Составить</button>
+                <button class="study-mode-btn" data-mode="mixed">🎲 Смешанный</button>
+            </div>
+
+            <div class="study-area" id="studyArea">
+                <div class="study-placeholder" id="studyPlaceholder">
+                    <span style="font-size: 32px; display: block; margin-bottom: 12px;">📝</span>
+                    Добавьте хотя бы 2 пары слов, чтобы начать изучение.
+                </div>
+                <div id="matchGame" class="hidden"></div>
+                <div id="writeGame" class="hidden"></div>
+                <div id="buildGame" class="hidden"></div>
+                <div id="mixedGame" class="hidden"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Модальное окно (карточка слова) -->
+    <div class="modal-overlay hidden" id="wordModal">
+        <div class="modal-card">
+            <button class="modal-close" id="modalClose">✕</button>
+            <div class="modal-word">
+                <span id="modalWordText"></span>
+                <button class="speak-btn" id="modalSpeakBtn" title="Озвучить слово">🔊</button>
+            </div>
+            <div class="modal-transcription" id="modalTranscription"></div>
+            <div class="modal-translation" id="modalTranslation"></div>
+            <div class="modal-example" id="modalExampleContainer">
+                <span class="label">Пример использования</span>
+                <span class="text" id="modalExample"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования -->
+    <div class="modal-overlay hidden edit-modal" id="editModal">
+        <div class="modal-card">
+            <button class="modal-close" id="editModalClose">✕</button>
+            <div class="modal-title">✏️ Редактировать слово</div>
+            <div class="edit-field">
+                <label for="editWordInput">Слово (оригинал)</label>
+                <input type="text" id="editWordInput" placeholder="Введите слово" />
+            </div>
+            <div class="edit-field">
+                <label for="editTranslationInput">Перевод</label>
+                <input type="text" id="editTranslationInput" placeholder="Введите перевод" />
+            </div>
+            <div class="edit-error" id="editError"></div>
+            <div class="edit-actions">
+                <button class="btn-cancel" id="editCancel">Отмена</button>
+                <button class="btn-save" id="editSave">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ========== DOM ==========
+            const wordInput = document.getElementById('wordInput');
+            const translationInput = document.getElementById('translationInput');
+            const addBtn = document.getElementById('addBtn');
+            const wordList = document.getElementById('wordList');
+            const emptyState = document.getElementById('emptyState');
+            const countDisplay = document.getElementById('countDisplay');
+            const messageEl = document.getElementById('message');
+            const saveStatus = document.getElementById('saveStatus');
+
+            // Вкладки
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabDictionary = document.getElementById('tabDictionary');
+            const tabStudy = document.getElementById('tabStudy');
+
+            // Изучение
+            const studyModeBtns = document.querySelectorAll('.study-mode-btn');
+            const matchGame = document.getElementById('matchGame');
+            const writeGame = document.getElementById('writeGame');
+            const buildGame = document.getElementById('buildGame');
+            const mixedGame = document.getElementById('mixedGame');
+            const studyPlaceholder = document.getElementById('studyPlaceholder');
+
+            // Модальное окно карточки
+            const modalOverlay = document.getElementById('wordModal');
+            const modalClose = document.getElementById('modalClose');
+            const modalWordText = document.getElementById('modalWordText');
+            const modalTranscription = document.getElementById('modalTranscription');
+            const modalTranslation = document.getElementById('modalTranslation');
+            const modalExample = document.getElementById('modalExample');
+            const modalExampleContainer = document.getElementById('modalExampleContainer');
+            const modalSpeakBtn = document.getElementById('modalSpeakBtn');
+
+            // Модальное окно редактирования
+            const editModal = document.getElementById('editModal');
+            const editModalClose = document.getElementById('editModalClose');
+            const editWordInput = document.getElementById('editWordInput');
+            const editTranslationInput = document.getElementById('editTranslationInput');
+            const editError = document.getElementById('editError');
+            const editCancel = document.getElementById('editCancel');
+            const editSave = document.getElementById('editSave');
+
+            // ========== Состояние ==========
+            let words = [];
+            let modalTimeout = null;
+            let editIndex = -1; // индекс редактируемого слова
+
+            // ========== Расширенный массив предзаписанных слов ==========
+            const defaultWords = [
+                // старые слова с транскрипцией и примером
+                { word: 'affianced', translation: 'помолвленный', transcription: '/əˈfaɪənst/', example: 'She is affianced to him.' },
+                { word: 'avail', translation: 'выгода', transcription: '/əˈveɪl/', example: 'Of what avail is it?' },
+                { word: 'beak', translation: 'клюв', transcription: '/biːk/', example: 'The bird has a sharp beak.' },
+                { word: 'betroth', translation: 'обручить', transcription: '/bɪˈtrəʊð/', example: 'They were betrothed in secret.' },
+                { word: 'bog', translation: 'болото', transcription: '/bɒɡ/', example: 'The car got stuck in the bog.' },
+                { word: 'commoner', translation: 'простой человек', transcription: '/ˈkɒmənə/', example: 'He is a commoner, not a noble.' },
+                { word: 'coup', translation: 'государственный переворот', transcription: '/kuː/', example: 'The coup was successful.' },
+                { word: 'cub', translation: 'детеныш', transcription: '/kʌb/', example: 'The lioness protects her cub.' },
+                { word: 'curtsy', translation: 'реверанс', transcription: '/ˈkɜːtsi/', example: 'She made a curtsy to the queen.' },
+                { word: 'dangle', translation: 'болтаться', transcription: '/ˈdæŋɡl/', example: 'The keys dangle from the hook.' },
+                { word: 'dawn', translation: 'рассвет', transcription: '/dɔːn/', example: 'We woke up at dawn.' },
+                { word: 'deliberately', translation: 'сознательно', transcription: '/dɪˈlɪbərətli/', example: 'He deliberately ignored me.' },
+                { word: 'descend', translation: 'спускаться', transcription: '/dɪˈsend/', example: 'The plane began to descend.' },
+                { word: 'ditch', translation: 'избавляться от', transcription: '/dɪtʃ/', example: 'They ditched the old car.' },
+                { word: 'dusk', translation: 'сумерки', transcription: '/dʌsk/', example: 'The streets are quiet at dusk.' },
+                { word: 'fuzzy', translation: 'пушистый', transcription: '/ˈfʌzi/', example: 'The little kitten is so fuzzy.' },
+                { word: 'grub', translation: 'личинка', transcription: '/ɡrʌb/', example: 'Birds feed on grubs.' },
+                { word: 'lousy', translation: 'паршивый', transcription: '/ˈlaʊzi/', example: 'The service was lousy.' },
+                { word: 'mangy', translation: 'паршивый', transcription: '/ˈmeɪndʒi/', example: 'The dog looked mangy.' },
+                { word: 'meticulous', translation: 'тщательный', transcription: '/məˈtɪkjələs/', example: 'She is meticulous in her work.' },
+                { word: 'mingle', translation: 'общаться', transcription: '/ˈmɪŋɡl/', example: 'He loves to mingle with people.' },
+                { word: 'murky', translation: 'темный', transcription: '/ˈmɜːki/', example: 'The water in the pond is murky.' },
+                { word: 'peculiar', translation: 'своеобразный', transcription: '/pɪˈkjuːliə/', example: 'He has a peculiar style.' },
+                { word: 'poacher', translation: 'браконьер', transcription: '/ˈpəʊtʃə/', example: 'The poacher was arrested.' },
+                { word: 'pounce', translation: 'набрасываться', transcription: '/paʊns/', example: 'The cat pounced on the mouse.' },
+                { word: 'retention', translation: 'способность запоминания', transcription: '/rɪˈtenʃn/', example: 'Good retention is important for learning.' },
+                { word: 'scam', translation: 'мошенничество', transcription: '/skæm/', example: 'He fell for an online scam.' },
+                { word: 'seasoning', translation: 'приправа', transcription: '/ˈsiːzənɪŋ/', example: 'Add some seasoning to the dish.' },
+                { word: 'slobber', translation: 'пускать слюни', transcription: '/ˈslɒbə/', example: 'The baby slobbers on his bib.' },
+                { word: 'squared', translation: 'улаживать', transcription: '/skweəd/', example: 'They squared their differences.' },
+                { word: 'stooge', translation: 'марионетка', transcription: '/stuːdʒ/', example: 'He is just a political stooge.' },
+                { word: 'succession', translation: 'наследование', transcription: '/səkˈseʃn/', example: 'The succession of the throne.' },
+                { word: 'tenacity', translation: 'упорство', transcription: '/təˈnæsəti/', example: 'His tenacity led him to success.' },
+                { word: 'tingle', translation: 'дрожать', transcription: '/ˈtɪŋɡl/', example: 'My fingers tingle with cold.' },
+                { word: 'toodles', translation: 'пока!', transcription: '/ˈtuːdlz/', example: 'Toodles! See you later.' },
+                { word: 'trespasser', translation: 'правонарушитель', transcription: '/ˈtrespəsə/', example: 'The trespasser was fined.' },
+                { word: 'undisputed', translation: 'бесспорный', transcription: '/ˌʌndɪˈspjuːtɪd/', example: 'He is the undisputed champion.' },
+                { word: 'unwind', translation: 'отдохнуть', transcription: '/ʌnˈwaɪnd/', example: 'I like to unwind with music.' },
+                { word: 'vacant', translation: 'пустой', transcription: '/ˈveɪkənt/', example: 'The room is vacant.' },
+                // новые слова (все из списка пользователя)
+                { word: 'embed', translation: 'вставлять', transcription: '/ɪmˈbed/', example: 'Embed the video in the post.' },
+                { word: 'reportedly', translation: 'по сообщениям', transcription: '/rɪˈpɔːtɪdli/', example: 'He reportedly resigned.' },
+                { word: 'beyond', translation: 'дальше', transcription: '/bɪˈjɒnd/', example: 'The road goes beyond the forest.' },
+                { word: 'stuntman', translation: 'каскадёр', transcription: '/ˈstʌntmæn/', example: 'The stuntman performed a dangerous jump.' },
+                { word: 'tackle', translation: 'справляться с проблемой', transcription: '/ˈtækl/', example: 'We need to tackle this issue.' },
+                { word: 'screen', translation: 'делать анализ', transcription: '/skriːn/', example: 'They screen all applicants.' },
+                { word: 'transcend', translation: 'превосходить', transcription: '/trænˈsend/', example: 'His art transcends time.' },
+                { word: 'utilise', translation: 'использовать', transcription: '/ˈjuːtəlaɪz/', example: 'We can utilise this resource.' },
+                { word: 'mimic', translation: 'имитировать', transcription: '/ˈmɪmɪk/', example: 'Parrots can mimic human speech.' },
+                { word: 'inferior', translation: 'недостаточно хороший', transcription: '/ɪnˈfɪəriə/', example: 'This product is inferior.' },
+                { word: 'lessen', translation: 'уменьшать', transcription: '/ˈlesn/', example: 'Exercise lessens the risk.' },
+                { word: 'alter', translation: 'изменять', transcription: '/ˈɔːltə/', example: 'We need to alter the plan.' },
+                { word: 'spine', translation: 'позвоночник', transcription: '/spaɪn/', example: 'He injured his spine.' },
+                { word: 'engage', translation: 'принимать участие', transcription: '/ɪnˈɡeɪdʒ/', example: 'She engages in many activities.' },
+                { word: 'relay', translation: 'передавать', transcription: '/rɪˈleɪ/', example: 'Relay the message to him.' },
+                { word: 'ultimately', translation: 'в конечном счёте', transcription: '/ˈʌltɪmətli/', example: 'Ultimately, we agreed.' },
+                { word: 'subsequently', translation: 'впоследствии', transcription: '/ˈsʌbsɪkwəntli/', example: 'He subsequently resigned.' },
+                { word: 'executive', translation: 'руководитель', transcription: '/ɪɡˈzekjətɪv/', example: 'The executive made a decision.' },
+                { word: 'outcome', translation: 'результат', transcription: '/ˈaʊtkʌm/', example: 'The outcome was positive.' },
+                { word: 'enhance', translation: 'увеличивать', transcription: '/ɪnˈhɑːns/', example: 'This will enhance your skills.' },
+                { word: 'resolve', translation: 'решать', transcription: '/rɪˈzɒlv/', example: 'We resolved the problem.' },
+                { word: 'encourage', translation: 'поддерживать', transcription: '/ɪnˈkʌrɪdʒ/', example: 'They encourage innovation.' },
+                { word: 'preserve', translation: 'сохранять, сберегать', transcription: '/prɪˈzɜːv/', example: 'We must preserve the forest.' },
+                { word: 'drastically', translation: 'радикально', transcription: '/ˈdræstɪkli/', example: 'Prices have dropped drastically.' },
+                { word: 'fraction', translation: 'крупица', transcription: '/ˈfrækʃn/', example: 'A fraction of the cost.' },
+                { word: 'conduct', translation: 'проводить', transcription: '/kənˈdʌkt/', example: 'They conducted an experiment.' },
+                { word: 'deteriorate', translation: 'ухудшаться', transcription: '/dɪˈtɪəriəreɪt/', example: 'His health deteriorated.' },
+                { word: 'implement', translation: 'осуществлять', transcription: '/ˈɪmplɪment/', example: 'Implement the new policy.' },
+                { word: 'shortage', translation: 'дефицит', transcription: '/ˈʃɔːtɪdʒ/', example: 'There is a water shortage.' },
+                { word: 'blood vessel', translation: 'кровеносный сосуд', transcription: '/blʌd ˈvesl/', example: 'A blood vessel burst.' },
+                { word: 'inhibit', translation: 'сдерживать', transcription: '/ɪnˈhɪbɪt/', example: 'This drug inhibits growth.' },
+                { word: 'skin graft', translation: 'кожный трансплантат', transcription: '/skɪn ɡrɑːft/', example: 'He needed a skin graft.' },
+                { word: 'tissue', translation: 'ткань', transcription: '/ˈtɪʃuː/', example: 'The tissue was damaged.' },
+                { word: 'devise', translation: 'придумывать', transcription: '/dɪˈvaɪz/', example: 'They devised a new method.' },
+                { word: 'clinical trial', translation: 'клиническое исследование', transcription: '/ˈklɪnɪkl ˈtraɪəl/', example: 'The clinical trial was successful.' },
+                { word: 'get down to', translation: 'приступать к', transcription: '/ɡet daʊn tuː/', example: 'Let\'s get down to business.' },
+                { word: 'bump into', translation: 'столкнуться с', transcription: '/bʌmp ˈɪntə/', example: 'I bumped into an old friend.' },
+                { word: 'distance yourself from', translation: 'отстраняться, дистанцироваться', transcription: '/ˈdɪstəns jɔːˈself frɒm/', example: 'He distanced himself from the scandal.' },
+                { word: 'govern', translation: 'управлять', transcription: '/ˈɡʌvn/', example: 'They govern the country.' },
+                { word: 'prospective', translation: 'потенциальный', transcription: '/prəˈspektɪv/', example: 'We have prospective buyers.' },
+                { word: 'marrow', translation: 'сущность', transcription: '/ˈmærəʊ/', example: 'The marrow of the argument.' },
+                { word: 'impasse', translation: 'тупик', transcription: '/ɪmˈpɑːs/', example: 'Negotiations reached an impasse.' },
+                { word: 'induce', translation: 'вызывать', transcription: '/ɪnˈdjuːs/', example: 'The drug induces sleep.' },
+                { word: 'allocate', translation: 'распределять', transcription: '/ˈæləkeɪt/', example: 'Allocate resources wisely.' },
+                { word: 'frenzy', translation: 'суматоха', transcription: '/ˈfrenzi/', example: 'The sale caused a frenzy.' },
+                { word: 'fruitful', translation: 'плодотворный', transcription: '/ˈfruːtfl/', example: 'A fruitful discussion.' },
+                { word: 'contentment', translation: 'удовлетворенность', transcription: '/kənˈtentmənt/', example: 'He found contentment in work.' },
+                { word: 'bar', translation: 'препятствовать', transcription: '/bɑː/', example: 'The law bars discrimination.' },
+                { word: 'incorrigible', translation: 'неисправимый', transcription: '/ɪnˈkɒrɪdʒəbl/', example: 'He is an incorrigible liar.' },
+                { word: 'hot-tempered', translation: 'вспыльчивый', transcription: '/hɒt ˈtempərd/', example: 'He is hot-tempered.' },
+                { word: 'snowed under', translation: 'заваленный', transcription: '/snəʊd ˈʌndə/', example: 'I\'m snowed under with work.' },
+                { word: 'wind down', translation: 'расслабляться', transcription: '/waɪnd daʊn/', example: 'I need to wind down.' },
+                { word: 'squeeze in', translation: 'находить время для', transcription: '/skwiːz ɪn/', example: 'Can you squeeze me in?' },
+                { word: 'slave away', translation: 'надрываться', transcription: '/sleɪv əˈweɪ/', example: 'He slaves away at work.' },
+                { word: 'rush around', translation: 'носиться', transcription: '/rʌʃ əˈraʊnd/', example: 'I rushed around all day.' },
+                { word: 'laze around', translation: 'бездельничать', transcription: '/leɪz əˈraʊnd/', example: 'We lazed around on Sunday.' },
+                { word: 'idle away', translation: 'бездельничать', transcription: '/ˈaɪdl əˈweɪ/', example: 'He idled away the hours.' },
+                { word: 'ease up', translation: 'облегчить', transcription: '/iːz ʌp/', example: 'Ease up on the pressure.' },
+                { word: 'ease off', translation: 'расслабиться', transcription: '/iːz ɒf/', example: 'The pain eased off.' },
+                { word: 'superbly', translation: 'отлично', transcription: '/suːˈpɜːbli/', example: 'She performed superbly.' },
+                { word: 'bustling', translation: 'суетливый', transcription: '/ˈbʌslɪŋ/', example: 'A bustling city.' },
+                { word: 'loll', translation: 'нежиться', transcription: '/lɒl/', example: 'He lolled on the sofa.' },
+                { word: 'timely', translation: 'своевременный', transcription: '/ˈtaɪmli/', example: 'A timely reminder.' },
+                { word: 'restore', translation: 'восстанавливать', transcription: '/rɪˈstɔː/', example: 'They restored the painting.' },
+                { word: 'lounge around', translation: 'бездельничать', transcription: '/laʊndʒ əˈraʊnd/', example: 'We lounged around all day.' },
+                { word: 'keep late hours', translation: 'долго не ложиться спать', transcription: '/kiːp leɪt ˈaʊəz/', example: 'He keeps late hours.' },
+                { word: 'impeccable', translation: 'безупречный', transcription: '/ɪmˈpekəbl/', example: 'Her manners are impeccable.' },
+                { word: 'throw rug', translation: 'половик', transcription: '/θrəʊ rʌɡ/', example: 'She bought a throw rug.' },
+                { word: 'get through', translation: 'закончить', transcription: '/ɡet θruː/', example: 'I got through the work.' },
+                { word: 'authorities', translation: 'власти', transcription: '/ɔːˈθɒrətiz/', example: 'The authorities intervened.' },
+                { word: 'overwhelmed', translation: 'ошеломлённый, перегруженный', transcription: '/ˌəʊvəˈwelmd/', example: 'I feel overwhelmed.' },
+                { word: 'unacceptable', translation: 'неприемлемый', transcription: '/ˌʌnəkˈseptəbl/', example: 'This is unacceptable.' },
+                { word: 'find fault', translation: 'придираться', transcription: '/faɪnd fɔːlt/', example: 'He finds fault with everything.' },
+                { word: 'collocation', translation: 'словосочетание', transcription: '/ˌkɒləˈkeɪʃn/', example: 'A common collocation.' },
+                { word: 'creed', translation: 'вероисповедание', transcription: '/kriːd/', example: 'People of all creeds.' },
+                { word: 'irritate', translation: 'раздражать', transcription: '/ˈɪrɪteɪt/', example: 'The noise irritates me.' },
+                { word: 'contribute', translation: 'вносить вклад', transcription: '/kənˈtrɪbjuːt/', example: 'They contribute to charity.' },
+                { word: 'dissect', translation: 'анализировать', transcription: '/dɪˈsekt/', example: 'We dissected the argument.' },
+                { word: 'poker face', translation: 'непроницаемое лицо', transcription: '/ˈpəʊkə feɪs/', example: 'He kept a poker face.' },
+                { word: 'down-to-earth', translation: 'практичный', transcription: '/ˌdaʊn tu ˈɜːθ/', example: 'She is down-to-earth.' },
+                { word: 'know-it-all', translation: 'всезнайка', transcription: '/ˈnəʊ ɪt ɔːl/', example: 'He is a know-it-all.' },
+                { word: 'armchair critic', translation: 'диванный критик', transcription: '/ˈɑːmtʃeə ˈkrɪtɪk/', example: 'Armchair critics are annoying.' },
+                { word: 'busybody', translation: 'вмешивающийся', transcription: '/ˈbɪzibɒdi/', example: 'She is a busybody.' },
+                { word: 'cheapskate', translation: 'скряга', transcription: '/ˈtʃiːpskeɪt/', example: 'He is a cheapskate.' },
+                { word: 'go-getter', translation: 'целеустремлённый', transcription: '/ˈɡəʊ ɡetə/', example: 'She is a go-getter.' },
+                { word: 'wet blanket', translation: 'зануда', transcription: '/wet ˈblæŋkɪt/', example: 'Don\'t be a wet blanket.' },
+                { word: 'worrywart', translation: 'беспокойный человек', transcription: '/ˈwʌriwɔːt/', example: 'He is a worrywart.' },
+                { word: 'revise', translation: 'повторять', transcription: '/rɪˈvaɪz/', example: 'I need to revise my notes.' },
+                { word: 'neurotic', translation: 'нервный', transcription: '/njʊəˈrɒtɪk/', example: 'She is neurotic.' },
+                { word: 'conscientious', translation: 'добросовестный', transcription: '/ˌkɒnʃiˈenʃəs/', example: 'She is a conscientious worker.' },
+                { word: 'stray', translation: 'бродячий', transcription: '/streɪ/', example: 'A stray dog.' },
+                { word: 'stand out', translation: 'выделяться', transcription: '/stænd aʊt/', example: 'She stands out from the crowd.' },
+                { word: 'indecisive', translation: 'нерешительный', transcription: '/ˌɪndɪˈsaɪsɪv/', example: 'He is indecisive.' },
+                { word: 'reflective', translation: 'задумчивый', transcription: '/rɪˈflektɪv/', example: 'She is in a reflective mood.' },
+                { word: 'account', translation: 'отчёт', transcription: '/əˈkaʊnt/', example: 'He gave a full account.' },
+                { word: 'maintain', translation: 'поддерживать', transcription: '/meɪnˈteɪn/', example: 'Maintain your position.' }
+            ];
+
+            // ========== Загрузка / Сохранение ==========
+            function loadWords() {
+                try {
+                    const stored = localStorage.getItem('linguaBoost_words_v2');
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        if (Array.isArray(parsed) && parsed.every(item => typeof item === 'object' && 'word' in item &&
+                                'translation' in item)) {
+                            words = parsed.map(w => ({
+                                word: w.word.toLowerCase(),
+                                translation: w.translation.toLowerCase(),
+                                learned: w.learned || false,
+                                transcription: w.transcription || '',
+                                example: w.example || ''
+                            }));
+                            addMissingDefaultWords();
+                            return;
+                        }
+                    }
+                } catch (_) {}
+                words = defaultWords.map(w => ({ ...w, learned: false }));
+                saveWords();
+            }
+
+            function addMissingDefaultWords() {
+                let added = 0;
+                defaultWords.forEach(def => {
+                    const exists = words.some(w => w.word.toLowerCase() === def.word.toLowerCase());
+                    if (!exists) {
+                        words.push({ ...def, learned: false });
+                        added++;
+                    }
+                });
+                if (added > 0) {
+                    saveWords();
+                }
+            }
+
+            function saveWords() {
+                try {
+                    localStorage.setItem('linguaBoost_words_v2', JSON.stringify(words));
+                    saveStatus.classList.add('show');
+                    clearTimeout(saveStatus._hideTimer);
+                    saveStatus._hideTimer = setTimeout(() => {
+                        saveStatus.classList.remove('show');
+                    }, 2000);
+                } catch (_) {}
+            }
+
+            // ========== Вспомогательные ==========
+            function isDuplicate(word, excludeIndex) {
+                const normalized = word.trim().toLowerCase();
+                return words.some((w, i) => i !== excludeIndex && w.word.toLowerCase() === normalized);
+            }
+
+            function showMessage(text, type = 'info', icon = 'ℹ️') {
+                const iconSpan = messageEl.querySelector('.icon');
+                const textSpan = messageEl.querySelector('.text');
+                iconSpan.textContent = icon;
+                textSpan.textContent = text;
+                messageEl.className = `message show ${type}`;
+                if (type !== 'error') {
+                    clearTimeout(messageEl._hideTimer);
+                    messageEl._hideTimer = setTimeout(() => {
+                        messageEl.classList.remove('show');
+                    }, 3500);
+                }
+            }
+
+            function hideMessage() {
+                messageEl.classList.remove('show');
+                clearTimeout(messageEl._hideTimer);
+            }
+
+            // ========== Рендер словаря ==========
+            function renderList() {
+                words.sort((a, b) => a.word.localeCompare(b.word, 'en', { sensitivity: 'base' }));
+
+                const items = wordList.querySelectorAll('.word-item');
+                items.forEach(el => el.remove());
+
+                if (words.length === 0) {
+                    emptyState.classList.remove('hidden');
+                } else {
+                    emptyState.classList.add('hidden');
+                }
+                countDisplay.textContent = words.length;
+
+                for (let i = 0; i < words.length; i++) {
+                    const entry = words[i];
+                    const li = document.createElement('li');
+                    li.className = 'word-item';
+                    li.dataset.index = i;
+
+                    const pairDiv = document.createElement('div');
+                    pairDiv.className = 'word-pair';
+                    const originalSpan = document.createElement('span');
+                    originalSpan.className = 'word-original';
+                    originalSpan.textContent = entry.word;
+                    const translationSpan = document.createElement('span');
+                    translationSpan.className = 'word-translation';
+                    translationSpan.textContent = entry.translation;
+                    pairDiv.appendChild(originalSpan);
+                    pairDiv.appendChild(translationSpan);
+
+                    // Клик по паре открывает карточку
+                    pairDiv.addEventListener('click', function(e) {
+                        const idx = parseInt(this.closest('.word-item').dataset.index, 10);
+                        showWordCardByIndex(idx);
+                    });
+
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'word-actions';
+
+                    const learnedBtn = document.createElement('button');
+                    learnedBtn.className = `learned-btn ${entry.learned ? 'active' : ''}`;
+                    learnedBtn.textContent = entry.learned ? '✅ Изучено' : '📘 Изучено';
+                    learnedBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        entry.learned = !entry.learned;
+                        saveWords();
+                        renderList();
+                        if (tabStudy.classList.contains('active')) {
+                            initStudy();
+                        }
+                    });
+                    actionsDiv.appendChild(learnedBtn);
+
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'edit-btn';
+                    editBtn.textContent = '✎';
+                    editBtn.setAttribute('aria-label', 'Редактировать');
+                    editBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const idx = parseInt(this.closest('.word-item').dataset.index, 10);
+                        openEditModal(idx);
+                    });
+                    actionsDiv.appendChild(editBtn);
+
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'delete-btn';
+                    delBtn.textContent = '✕';
+                    delBtn.setAttribute('aria-label', 'Удалить пару');
+                    delBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const idx = parseInt(this.closest('.word-item').dataset.index, 10);
+                        deleteWord(idx);
+                    });
+                    actionsDiv.appendChild(delBtn);
+
+                    li.appendChild(pairDiv);
+                    li.appendChild(actionsDiv);
+                    wordList.appendChild(li);
+                }
+                saveWords();
+                if (tabStudy.classList.contains('active')) {
+                    initStudy();
+                }
+            }
+
+            function deleteWord(index) {
+                if (index < 0 || index >= words.length) return;
+                const removed = words[index];
+                words.splice(index, 1);
+                showMessage(`«${removed.word}» удалено`, 'info', '🗑️');
+                renderList();
+                wordInput.focus();
+            }
+
+            // ========== Редактирование ==========
+            function openEditModal(index) {
+                const entry = words[index];
+                if (!entry) return;
+                editIndex = index;
+                editWordInput.value = entry.word;
+                editTranslationInput.value = entry.translation;
+                editError.textContent = '';
+                editWordInput.classList.remove('duplicate');
+                editModal.classList.remove('hidden');
+                editWordInput.focus();
+                editWordInput.select();
+            }
+
+            function closeEditModal() {
+                editModal.classList.add('hidden');
+                editIndex = -1;
+                editError.textContent = '';
+                editWordInput.classList.remove('duplicate');
+            }
+
+            function saveEdit() {
+                const newWord = editWordInput.value.trim().toLowerCase();
+                const newTranslation = editTranslationInput.value.trim().toLowerCase();
+
+                if (!newWord) {
+                    editError.textContent = 'Введите слово';
+                    editWordInput.focus();
+                    return;
+                }
+                if (!newTranslation) {
+                    editError.textContent = 'Введите перевод';
+                    editTranslationInput.focus();
+                    return;
+                }
+
+                // Проверка дубликата (исключая себя)
+                if (isDuplicate(newWord, editIndex)) {
+                    editError.textContent = 'Слово уже существует в словаре';
+                    editWordInput.classList.add('duplicate');
+                    editWordInput.focus();
+                    return;
+                }
+
+                // Сохраняем изменения
+                words[editIndex].word = newWord;
+                words[editIndex].translation = newTranslation;
+                // Транскрипция и пример остаются прежними
+                saveWords();
+                renderList();
+                closeEditModal();
+                showMessage(`Слово обновлено!`, 'success', '✅');
+            }
+
+            // ========== Карточка слова ==========
+            function showWordCardByIndex(index) {
+                const entry = words[index];
+                if (!entry) return;
+                fillModal(entry);
+            }
+
+            function showWordCardByWord(wordObj) {
+                const entry = words.find(w => w.word === wordObj.word);
+                if (entry) {
+                    fillModal(entry);
+                } else {
+                    fillModal(wordObj);
+                }
+            }
+
+            function fillModal(entry) {
+                modalWordText.textContent = entry.word;
+                modalTranscription.textContent = entry.transcription || '—';
+                modalTranslation.textContent = entry.translation;
+                modalExample.textContent = entry.example || 'Пример отсутствует';
+                modalExampleContainer.style.display = entry.example ? 'block' : 'none';
+                modalSpeakBtn.dataset.word = entry.word;
+                modalOverlay.classList.remove('hidden');
+                setTimeout(() => {
+                    speakWord(entry.word);
+                }, 300);
+            }
+
+            function closeModal() {
+                modalOverlay.classList.add('hidden');
+                if (modalTimeout) {
+                    clearTimeout(modalTimeout);
+                    modalTimeout = null;
+                }
+            }
+
+            function speakWord(word) {
+                if (!word) return;
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(word);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.9;
+                    utterance.pitch = 1;
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    showMessage('Озвучка не поддерживается вашим браузером.', 'info', '🔇');
+                }
+            }
+
+            // ========== Добавление слова ==========
+            function addWord() {
+                const rawWord = wordInput.value.trim().toLowerCase();
+                const rawTranslation = translationInput.value.trim().toLowerCase();
+
+                if (!rawWord) {
+                    showMessage('Введите слово (оригинал)', 'error', '⚠️');
+                    wordInput.classList.remove('success', 'duplicate');
+                    wordInput.focus();
+                    return;
+                }
+                if (!rawTranslation) {
+                    showMessage('Введите перевод', 'error', '⚠️');
+                    translationInput.classList.remove('success', 'duplicate');
+                    translationInput.focus();
+                    return;
+                }
+
+                if (isDuplicate(rawWord, -1)) {
+                    showMessage(`Слово «${rawWord}» уже есть в словаре`, 'error', '🔁');
+                    wordInput.classList.remove('success');
+                    wordInput.classList.add('duplicate');
+                    wordInput.style.animation = 'none';
+                    requestAnimationFrame(() => {
+                        wordInput.style.animation = 'shake 0.4s ease';
+                    });
+                    wordInput.focus();
+                    wordInput.select();
+                    return;
+                }
+
+                words.push({
+                    word: rawWord,
+                    translation: rawTranslation,
+                    learned: false,
+                    transcription: '',
+                    example: ''
+                });
+
+                wordInput.value = '';
+                translationInput.value = '';
+
+                wordInput.classList.remove('duplicate', 'success');
+                translationInput.classList.remove('duplicate', 'success');
+                wordInput.classList.add('success');
+                translationInput.classList.add('success');
+
+                showMessage(`«${rawWord}» → «${rawTranslation}» добавлено!`, 'success', '✅');
+                renderList();
+
+                wordInput.style.animation = 'none';
+                requestAnimationFrame(() => {
+                    wordInput.style.animation = '';
+                });
+                translationInput.style.animation = 'none';
+                requestAnimationFrame(() => {
+                    translationInput.style.animation = '';
+                });
+
+                setTimeout(() => {
+                    wordInput.classList.remove('success');
+                    translationInput.classList.remove('success');
+                }, 1200);
+
+                wordInput.focus();
+            }
+
+            // ========== ИЗУЧЕНИЕ (код без изменений, использует перемешанные слова) ==========
+            let currentStudyMode = 'match';
+            let studyWords = [];
+
+            let matchState = { pending: [], currentPairs: [], selected: null, selectedElement: null, score: 0, total: 0,
+                done: false };
+            let writeState = { pending: [], currentWord: null, score: 0, total: 0, done: false };
+            let buildState = { pending: [], currentWord: null, score: 0, total: 0, tiles: [], currentBuild: [], done: false };
+            let mixedState = { pending: [], currentTask: null, tasks: [], taskIndex: 0, score: 0, total: 0, done: false };
+
+            function initStudy() {
+                const unlearned = words.filter(w => !w.learned);
+                if (unlearned.length < 2) {
+                    studyPlaceholder.classList.remove('hidden');
+                    matchGame.classList.add('hidden');
+                    writeGame.classList.add('hidden');
+                    buildGame.classList.add('hidden');
+                    mixedGame.classList.add('hidden');
+                    if (unlearned.length === 0) {
+                        studyPlaceholder.innerHTML = `
+                            <span style="font-size: 32px; display: block; margin-bottom: 12px;">🎉</span>
+                            <p>Все слова изучены! Отличная работа!</p>
+                            <div class="sub">Отмечайте новые слова в словаре, чтобы тренироваться дальше.</div>
+                        `;
+                    } else {
+                        studyPlaceholder.innerHTML = `
+                            <span style="font-size: 32px; display: block; margin-bottom: 12px;">📝</span>
+                            <p>Добавьте хотя бы 2 невыученных слова, чтобы начать изучение.</p>
+                            <div class="sub">Отмечайте изученные слова в словаре.</div>
+                        `;
+                    }
+                    return;
+                }
+                studyPlaceholder.classList.add('hidden');
+                studyWords = shuffleArray(unlearned.map(w => ({ ...w })));
+
+                matchState.pending = studyWords.slice();
+                matchState.currentPairs = [];
+                matchState.selected = null;
+                matchState.selectedElement = null;
+                matchState.score = 0;
+                matchState.total = 0;
+                matchState.done = false;
+
+                writeState.pending = studyWords.slice();
+                writeState.currentWord = null;
+                writeState.score = 0;
+                writeState.total = 0;
+                writeState.done = false;
+
+                buildState.pending = studyWords.slice();
+                buildState.currentWord = null;
+                buildState.score = 0;
+                buildState.total = 0;
+                buildState.done = false;
+
+                mixedState.pending = studyWords.slice();
+                mixedState.currentTask = null;
+                mixedState.tasks = [];
+                mixedState.taskIndex = 0;
+                mixedState.score = 0;
+                mixedState.total = 0;
+                mixedState.done = false;
+
+                showStudyMode(currentStudyMode);
+            }
+
+            function showStudyMode(mode) {
+                matchGame.classList.add('hidden');
+                writeGame.classList.add('hidden');
+                buildGame.classList.add('hidden');
+                mixedGame.classList.add('hidden');
+
+                studyModeBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
+                currentStudyMode = mode;
+
+                if (mode === 'match') { matchGame.classList.remove('hidden');
+                    initMatchGame(); } else if (mode === 'write') { writeGame.classList.remove('hidden');
+                    initWriteGame(); } else if (mode === 'build') { buildGame.classList.remove('hidden');
+                    initBuildGame(); } else if (mode === 'mixed') { mixedGame.classList.remove('hidden');
+                    initMixedGame(); }
+            }
+
+            function shuffleArray(arr) {
+                const a = arr.slice();
+                for (let i = a.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [a[i], a[j]] = [a[j], a[i]];
+                }
+                return a;
+            }
+
+            // ---------- СОПОСТАВЛЕНИЕ ----------
+            function initMatchGame() {
+                if (matchState.pending.length === 0) {
+                    matchState.done = true;
+                    renderMatchGame();
+                    return;
+                }
+                const shuffled = shuffleArray(matchState.pending.slice());
+                const count = Math.min(shuffled.length, 10);
+                const selected = shuffled.slice(0, count);
+                matchState.currentPairs = selected.map(w => ({
+                    word: w.word,
+                    translation: w.translation,
+                    matched: false,
+                    _ref: w
+                }));
+                matchState.selected = null;
+                matchState.selectedElement = null;
+                matchState.total = selected.length;
+                matchState.score = matchState.score || 0;
+                renderMatchGame();
+            }
+
+            function renderMatchGame() {
+                const container = matchGame;
+                if (matchState.done) {
+                    container.innerHTML = `
+                        <div style="text-align:center; padding:30px;">
+                            <div style="font-size:48px;">🎉</div>
+                            <h3>Все слова сопоставлены!</h3>
+                            <p style="color:#5a7a9a; margin:12px 0;">Правильных ответов: ${matchState.score} из ${matchState.total}</p>
+                            <button class="btn-add" id="resetMatchDone" style="margin:0 auto;">🔄 Начать заново</button>
+                        </div>
+                    `;
+                    document.getElementById('resetMatchDone')?.addEventListener('click', function() {
+                        matchState.pending = studyWords.slice();
+                        matchState.score = 0;
+                        matchState.total = 0;
+                        matchState.done = false;
+                        initMatchGame();
+                    });
+                    return;
+                }
+
+                const shuffledPairs = shuffleArray(matchState.currentPairs.slice());
+                let html = `
+                    <div class="study-progress">
+                        <span class="score">✅ ${matchState.score} / ${matchState.total}</span>
+                        <button class="skip-btn" id="skipMatch">⏭ Пропустить</button>
+                        <button class="reset-study" id="resetMatch">🔄 Начать заново</button>
+                    </div>
+                    <div class="match-container">
+                        <div class="match-column">
+                            <h4>Слова</h4>
+                            ${matchState.currentPairs.map((p, idx) => `
+                                <div class="match-item ${p.matched ? 'matched' : ''}" data-type="word" data-idx="${idx}">
+                                    ${p.matched ? '✅ ' : ''}${p.word}
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="match-column">
+                            <h4>Переводы</h4>
+                            ${shuffledPairs.map((p) => {
+                                const idx = matchState.currentPairs.indexOf(p);
+                                return `
+                                    <div class="match-item ${p.matched ? 'matched' : ''}" data-type="translation" data-idx="${idx}">
+                                        ${p.matched ? '✅ ' : ''}${p.translation}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    <div class="match-score" id="matchFeedback"></div>
+                `;
+                container.innerHTML = html;
+
+                container.querySelectorAll('.match-item:not(.matched)').forEach(el => {
+                    el.addEventListener('click', function() {
+                        if (this.classList.contains('matched')) return;
+                        const type = this.dataset.type;
+                        const idx = parseInt(this.dataset.idx, 10);
+                        handleMatchClick(type, idx, this);
+                    });
+                });
+
+                document.getElementById('resetMatch')?.addEventListener('click', function() {
+                    matchState.pending = studyWords.slice();
+                    matchState.score = 0;
+                    matchState.total = 0;
+                    matchState.done = false;
+                    initMatchGame();
+                });
+
+                document.getElementById('skipMatch')?.addEventListener('click', function() {
+                    const unmatched = matchState.currentPairs.filter(p => !p.matched);
+                    if (unmatched.length > 0) {
+                        const first = unmatched[0];
+                        showWordCardByWord(first._ref);
+                    }
+                    matchState.currentPairs.forEach(p => {
+                        if (!p.matched) {
+                            const idx = matchState.pending.indexOf(p._ref);
+                            if (idx !== -1) {
+                                matchState.pending.splice(idx, 1);
+                                matchState.pending.push(p._ref);
+                            }
+                            p.matched = true;
+                        }
+                    });
+                    setTimeout(() => {
+                        closeModal();
+                        if (matchState.currentPairs.every(p => p.matched)) {
+                            initMatchGame();
+                        }
+                    }, 1500);
+                });
+
+                if (matchState.currentPairs.every(p => p.matched)) {
+                    const toRemove = matchState.currentPairs.filter(p => p.matched).map(p => p._ref);
+                    toRemove.forEach(ref => {
+                        const idx = matchState.pending.indexOf(ref);
+                        if (idx !== -1) matchState.pending.splice(idx, 1);
+                    });
+                    matchState.score = matchState.score || 0;
+                    setTimeout(() => {
+                        initMatchGame();
+                    }, 300);
+                }
+            }
+
+            function handleMatchClick(type, idx, element) {
+                const pair = matchState.currentPairs[idx];
+                if (pair.matched) return;
+
+                if (matchState.selected === null) {
+                    matchState.selected = type;
+                    matchState.selectedElement = element;
+                    element.classList.add('selected');
+                    return;
+                }
+
+                const firstType = matchState.selected;
+                const firstElement = matchState.selectedElement;
+                const firstIdx = parseInt(firstElement.dataset.idx, 10);
+                const firstPair = matchState.currentPairs[firstIdx];
+
+                if (firstType === type) {
+                    firstElement.classList.remove('selected');
+                    matchState.selected = null;
+                    matchState.selectedElement = null;
+                    return;
+                }
+
+                let correct = false;
+                if (firstType === 'word' && type === 'translation') {
+                    correct = (firstPair.translation === pair.translation);
+                } else if (firstType === 'translation' && type === 'word') {
+                    correct = (firstPair.word === pair.word);
+                }
+
+                const feedback = document.getElementById('matchFeedback');
+
+                if (correct) {
+                    firstPair.matched = true;
+                    pair.matched = true;
+                    matchState.score++;
+                    feedback.textContent = '✅ Правильно!';
+                    feedback.style.color = '#27ae60';
+                    firstElement.classList.remove('selected');
+                    matchState.selected = null;
+                    matchState.selectedElement = null;
+                    showWordCardByWord(firstPair._ref);
+                    setTimeout(() => {
+                        closeModal();
+                        renderMatchGame();
+                    }, 1500);
+                } else {
+                    feedback.textContent = '❌ Неправильно, попробуйте ещё';
+                    feedback.style.color = '#e74c3c';
+                    firstElement.classList.add('wrong');
+                    element.classList.add('wrong');
+                    setTimeout(() => {
+                        firstElement.classList.remove('wrong', 'selected');
+                        element.classList.remove('wrong');
+                        matchState.selected = null;
+                        matchState.selectedElement = null;
+                        renderMatchGame();
+                    }, 500);
+                }
+            }
+
+            // ---------- НАПИСАТЬ ----------
+            function initWriteGame() {
+                if (writeState.pending.length === 0) {
+                    writeState.done = true;
+                    renderWriteGame();
+                    return;
+                }
+                const word = writeState.pending[0];
+                writeState.currentWord = word;
+                writeState.total = writeState.pending.length + writeState.score;
+                renderWriteGame();
+            }
+
+            function renderWriteGame() {
+                const container = writeGame;
+                if (writeState.done) {
+                    container.innerHTML = `
+                        <div style="text-align:center; padding:30px;">
+                            <div style="font-size:48px;">🎉</div>
+                            <h3>Все слова написаны!</h3>
+                            <p style="color:#5a7a9a; margin:12px 0;">Правильных ответов: ${writeState.score} из ${writeState.total}</p>
+                            <button class="btn-add" id="resetWriteDone" style="margin:0 auto;">🔄 Начать заново</button>
+                        </div>
+                    `;
+                    document.getElementById('resetWriteDone')?.addEventListener('click', function() {
+                        writeState.pending = studyWords.slice();
+                        writeState.score = 0;
+                        writeState.total = 0;
+                        writeState.done = false;
+                        initWriteGame();
+                    });
+                    return;
+                }
+
+                const current = writeState.currentWord;
+                let html = `
+                    <div class="study-progress">
+                        <span class="score">✅ ${writeState.score} / ${writeState.total}</span>
+                        <button class="skip-btn" id="skipWrite">⏭ Пропустить</button>
+                        <button class="reset-study" id="resetWriteProgress">🔄 Начать заново</button>
+                    </div>
+                    <div class="write-container">
+                        <div class="prompt">
+                            ${current.translation}
+                            <small>Введите слово на языке оригинала</small>
+                        </div>
+                        <input type="text" id="writeInput" placeholder="Введите слово..." autofocus />
+                        <div class="write-feedback" id="writeFeedback"></div>
+                    </div>
+                `;
+                container.innerHTML = html;
+
+                const input = document.getElementById('writeInput');
+                const feedback = document.getElementById('writeFeedback');
+                let answered = false;
+
+                if (input) {
+                    input.focus();
+                }
+
+                input.addEventListener('input', function() {
+                    if (answered) return;
+                    const val = this.value.trim();
+                    if (!val) {
+                        this.classList.remove('correct', 'wrong', 'prefix-ok');
+                        feedback.textContent = '';
+                        return;
+                    }
+                    const correct = current.word.toLowerCase();
+                    const inputLower = val.toLowerCase();
+
+                    if (inputLower === correct) {
+                        this.classList.remove('wrong', 'prefix-ok');
+                        this.classList.add('correct');
+                        feedback.textContent = '✅ Правильно!';
+                        feedback.style.color = '#27ae60';
+                        const idx = writeState.pending.indexOf(current);
+                        if (idx !== -1) writeState.pending.splice(idx, 1);
+                        writeState.score++;
+                        answered = true;
+                        showWordCardByWord(current);
+                        setTimeout(() => {
+                            closeModal();
+                            initWriteGame();
+                        }, 1500);
+                    } else if (correct.startsWith(inputLower)) {
+                        this.classList.remove('wrong', 'correct');
+                        this.classList.add('prefix-ok');
+                        feedback.textContent = '👍 продолжай...';
+                        feedback.style.color = '#f1c40f';
+                    } else {
+                        this.classList.remove('correct', 'prefix-ok');
+                        this.classList.add('wrong');
+                        feedback.textContent = '❌ ошибка в букве';
+                        feedback.style.color = '#e74c3c';
+                    }
+                });
+
+                document.getElementById('resetWriteProgress')?.addEventListener('click', function() {
+                    writeState.pending = studyWords.slice();
+                    writeState.score = 0;
+                    writeState.total = 0;
+                    writeState.done = false;
+                    initWriteGame();
+                });
+
+                document.getElementById('skipWrite')?.addEventListener('click', function() {
+                    if (answered) return;
+                    showWordCardByWord(current);
+                    const idx = writeState.pending.indexOf(current);
+                    if (idx !== -1) {
+                        writeState.pending.splice(idx, 1);
+                        writeState.pending.push(current);
+                    }
+                    answered = true;
+                    setTimeout(() => {
+                        closeModal();
+                        initWriteGame();
+                    }, 1500);
+                });
+            }
+
+            // ---------- СОСТАВИТЬ ----------
+            function initBuildGame() {
+                if (buildState.pending.length === 0) {
+                    buildState.done = true;
+                    renderBuildGame();
+                    return;
+                }
+                const word = buildState.pending[0];
+                buildState.currentWord = word;
+                buildState.total = buildState.pending.length + buildState.score;
+                const letters = word.word.split('');
+                const shuffled = shuffleArray(letters.slice());
+                buildState.tiles = shuffled.map(ch => ({ char: ch, placed: false }));
+                buildState.currentBuild = [];
+                renderBuildGame();
+            }
+
+            function renderBuildGame() {
+                const container = buildGame;
+                if (buildState.done) {
+                    container.innerHTML = `
+                        <div style="text-align:center; padding:30px;">
+                            <div style="font-size:48px;">🎉</div>
+                            <h3>Все слова собраны!</h3>
+                            <p style="color:#5a7a9a; margin:12px 0;">Правильных ответов: ${buildState.score} из ${buildState.total}</p>
+                            <button class="btn-add" id="resetBuildDone" style="margin:0 auto;">🔄 Начать заново</button>
+                        </div>
+                    `;
+                    document.getElementById('resetBuildDone')?.addEventListener('click', function() {
+                        buildState.pending = studyWords.slice();
+                        buildState.score = 0;
+                        buildState.total = 0;
+                        buildState.done = false;
+                        initBuildGame();
+                    });
+                    return;
+                }
+
+                const current = buildState.currentWord;
+                const translation = current.translation;
+
+                let html = `
+                    <div class="study-progress">
+                        <span class="score">✅ ${buildState.score} / ${buildState.total}</span>
+                        <button class="skip-btn" id="skipBuild">⏭ Пропустить</button>
+                        <button class="reset-study" id="resetBuildProgress">🔄 Начать заново</button>
+                    </div>
+                    <div class="build-container">
+                        <div class="build-translation">Перевод: ${translation}</div>
+                        <div class="build-prompt">Соберите слово из букв</div>
+                        <div class="build-current" id="buildCurrent"></div>
+                        <div class="build-tiles" id="buildTiles"></div>
+                        <div class="build-controls">
+                            <button class="btn-reset" id="buildReset">🔄 Сбросить</button>
+                        </div>
+                        <div class="build-feedback" id="buildFeedback"></div>
+                    </div>
+                `;
+                container.innerHTML = html;
+
+                renderBuildTiles();
+
+                document.getElementById('buildReset')?.addEventListener('click', function() {
+                    buildState.tiles.forEach(t => t.placed = false);
+                    buildState.currentBuild = [];
+                    renderBuildTiles();
+                    document.getElementById('buildFeedback').textContent = '';
+                });
+
+                document.getElementById('resetBuildProgress')?.addEventListener('click', function() {
+                    buildState.pending = studyWords.slice();
+                    buildState.score = 0;
+                    buildState.total = 0;
+                    buildState.done = false;
+                    initBuildGame();
+                });
+
+                document.getElementById('skipBuild')?.addEventListener('click', function() {
+                    showWordCardByWord(current);
+                    const idx = buildState.pending.indexOf(current);
+                    if (idx !== -1) {
+                        buildState.pending.splice(idx, 1);
+                        buildState.pending.push(current);
+                    }
+                    buildState.currentBuild = [];
+                    setTimeout(() => {
+                        closeModal();
+                        initBuildGame();
+                    }, 1500);
+                });
+            }
+
+            function renderBuildTiles() {
+                const tilesContainer = document.getElementById('buildTiles');
+                const currentDisplay = document.getElementById('buildCurrent');
+                const feedback = document.getElementById('buildFeedback');
+                const current = buildState.currentWord;
+                const correct = current.word;
+
+                currentDisplay.textContent = buildState.currentBuild.join('');
+                const currentStr = buildState.currentBuild.join('');
+
+                if (currentStr.length > 0) {
+                    if (currentStr.toLowerCase() === correct.toLowerCase()) {
+                        feedback.textContent = '✅ Правильно!';
+                        feedback.style.color = '#27ae60';
+                        const idx = buildState.pending.indexOf(current);
+                        if (idx !== -1) buildState.pending.splice(idx, 1);
+                        buildState.score++;
+                        showWordCardByWord(current);
+                        setTimeout(() => {
+                            closeModal();
+                            initBuildGame();
+                        }, 1500);
+                        return;
+                    } else if (correct.toLowerCase().startsWith(currentStr.toLowerCase())) {
+                        feedback.textContent = '👍 продолжай...';
+                        feedback.style.color = '#f1c40f';
+                    } else {
+                        feedback.textContent = '❌ ошибка в букве';
+                        feedback.style.color = '#e74c3c';
+                        const tiles = tilesContainer.querySelectorAll('.build-tile');
+                        let lastPlacedIdx = -1;
+                        for (let i = buildState.tiles.length - 1; i >= 0; i--) {
+                            if (buildState.tiles[i].placed) {
+                                lastPlacedIdx = i;
+                                break;
+                            }
+                        }
+                        if (lastPlacedIdx !== -1) {
+                            const tileEl = tiles[lastPlacedIdx];
+                            tileEl.classList.add('wrong');
+                            setTimeout(() => {
+                                if (buildState.currentBuild.length > 0) {
+                                    const removed = buildState.currentBuild.pop();
+                                    for (let i = buildState.tiles.length - 1; i >= 0; i--) {
+                                        if (buildState.tiles[i].placed && buildState.tiles[i].char === removed) {
+                                            buildState.tiles[i].placed = false;
+                                            break;
+                                        }
+                                    }
+                                    renderBuildTiles();
+                                }
+                            }, 400);
+                        }
+                    }
+                } else {
+                    feedback.textContent = '';
+                }
+
+                tilesContainer.innerHTML = '';
+                buildState.tiles.forEach((tile, index) => {
+                    const div = document.createElement('div');
+                    div.className = `build-tile ${tile.placed ? 'placed' : ''}`;
+                    div.textContent = tile.char;
+                    div.dataset.index = index;
+                    if (!tile.placed) {
+                        div.addEventListener('click', function() {
+                            const idx = parseInt(this.dataset.index, 10);
+                            if (!buildState.tiles[idx].placed) {
+                                buildState.tiles[idx].placed = true;
+                                buildState.currentBuild.push(buildState.tiles[idx].char);
+                                renderBuildTiles();
+                            }
+                        });
+                    }
+                    tilesContainer.appendChild(div);
+                });
+
+                currentDisplay.style.cursor = 'pointer';
+                currentDisplay.onclick = function() {
+                    if (buildState.currentBuild.length > 0) {
+                        const removed = buildState.currentBuild.pop();
+                        for (let i = buildState.tiles.length - 1; i >= 0; i--) {
+                            if (buildState.tiles[i].placed && buildState.tiles[i].char === removed) {
+                                buildState.tiles[i].placed = false;
+                                break;
+                            }
+                        }
+                        renderBuildTiles();
+                    }
+                };
+            }
+
+            // ---------- СМЕШАННЫЙ ----------
+            function initMixedGame() {
+                if (mixedState.pending.length === 0) {
+                    mixedState.done = true;
+                    renderMixedGame();
+                    return;
+                }
+                const tasks = [];
+                mixedState.pending.forEach(w => {
+                    const types = ['match', 'write', 'build'];
+                    const type = types[Math.floor(Math.random() * types.length)];
+                    tasks.push({ type, word: w.word, translation: w.translation, ref: w, done: false });
+                });
+                mixedState.tasks = shuffleArray(tasks.slice());
+                mixedState.taskIndex = 0;
+                mixedState.total = mixedState.tasks.length;
+                mixedState.score = mixedState.score || 0;
+                renderMixedGame();
+            }
+
+            function renderMixedGame() {
+                const container = mixedGame;
+                if (mixedState.done) {
+                    container.innerHTML = `
+                        <div style="text-align:center; padding:30px;">
+                            <div style="font-size:48px;">🎉</div>
+                            <h3>Все задания выполнены!</h3>
+                            <p style="color:#5a7a9a; margin:12px 0;">Правильных ответов: ${mixedState.score} из ${mixedState.total}</p>
+                            <button class="btn-add" id="resetMixedDone" style="margin:0 auto;">🔄 Начать заново</button>
+                        </div>
+                    `;
+                    document.getElementById('resetMixedDone')?.addEventListener('click', function() {
+                        mixedState.pending = studyWords.slice();
+                        mixedState.score = 0;
+                        mixedState.total = 0;
+                        mixedState.done = false;
+                        initMixedGame();
+                    });
+                    return;
+                }
+
+                const task = mixedState.tasks[mixedState.taskIndex];
+                if (!task) {
+                    initMixedGame();
+                    return;
+                }
+
+                const modeNames = { match: '🔗 Сопоставить', write: '✍️ Написать', build: '🧩 Составить' };
+
+                let html = `
+                    <div class="study-progress">
+                        <span class="score">✅ ${mixedState.score} / ${mixedState.total}</span>
+                        <span class="mode-label">${modeNames[task.type]}</span>
+                        <button class="skip-btn" id="skipMixed">⏭ Пропустить</button>
+                        <button class="reset-study" id="resetMixedProgress">🔄 Начать заново</button>
+                    </div>
+                    <div id="mixedTaskContent"></div>
+                `;
+                container.innerHTML = html;
+
+                const content = document.getElementById('mixedTaskContent');
+
+                if (task.type === 'match') {
+                    const correctTranslation = task.translation;
+                    const otherTranslations = studyWords.filter(w => w.translation !== correctTranslation).map(w => w.translation);
+                    const shuffledOthers = shuffleArray(otherTranslations.slice()).slice(0, 3);
+                    const options = shuffleArray([correctTranslation, ...shuffledOthers]);
+
+                    html = `
+                        <div style="text-align:center;">
+                            <div style="font-size:24px; font-weight:600; margin:12px 0;">${task.word}</div>
+                            <div style="font-size:16px; color:#5a7a9a; margin-bottom:16px;">Выберите правильный перевод</div>
+                            <div style="display:flex; flex-direction:column; gap:10px; align-items:center;">
+                                ${options.map(opt => `
+                                    <button class="match-item" data-translation="${opt}" style="width:80%; max-width:300px;">${opt}</button>
+                                `).join('')}
+                            </div>
+                            <div id="mixedMatchFeedback" style="margin-top:16px; font-weight:500;"></div>
+                        </div>
+                    `;
+                    content.innerHTML = html;
+
+                    let answered = false;
+                    content.querySelectorAll('.match-item').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            if (answered) return;
+                            const selected = this.dataset.translation;
+                            const feedback = document.getElementById('mixedMatchFeedback');
+                            if (selected === correctTranslation) {
+                                feedback.textContent = '✅ Правильно!';
+                                feedback.style.color = '#27ae60';
+                                const idx = mixedState.pending.indexOf(task.ref);
+                                if (idx !== -1) mixedState.pending.splice(idx, 1);
+                                mixedState.score++;
+                                answered = true;
+                                showWordCardByWord(task.ref);
+                                setTimeout(() => {
+                                    closeModal();
+                                    mixedState.taskIndex++;
+                                    renderMixedGame();
+                                }, 1500);
+                            } else {
+                                feedback.textContent = '❌ Неправильно';
+                                feedback.style.color = '#e74c3c';
+                                this.classList.add('wrong');
+                                answered = true;
+                                setTimeout(() => {
+                                    mixedState.taskIndex++;
+                                    renderMixedGame();
+                                }, 1200);
+                            }
+                        });
+                    });
+
+                    document.getElementById('skipMixed')?.addEventListener('click', function() {
+                        if (answered) return;
+                        showWordCardByWord(task.ref);
+                        const idx = mixedState.pending.indexOf(task.ref);
+                        if (idx !== -1) {
+                            mixedState.pending.splice(idx, 1);
+                            mixedState.pending.push(task.ref);
+                        }
+                        answered = true;
+                        setTimeout(() => {
+                            closeModal();
+                            mixedState.taskIndex++;
+                            renderMixedGame();
+                        }, 1500);
+                    });
+
+                } else if (task.type === 'write') {
+                    html = `
+                        <div class="write-container">
+                            <div class="prompt">
+                                ${task.translation}
+                                <small>Введите слово на языке оригинала</small>
+                            </div>
+                            <input type="text" id="mixedWriteInput" placeholder="Введите слово..." autofocus />
+                            <div class="write-feedback" id="mixedWriteFeedback"></div>
+                        </div>
+                    `;
+                    content.innerHTML = html;
+
+                    const input = document.getElementById('mixedWriteInput');
+                    const feedback = document.getElementById('mixedWriteFeedback');
+                    let answered = false;
+
+                    if (input) {
+                        input.focus();
+                    }
+
+                    input.addEventListener('input', function() {
+                        if (answered) return;
+                        const val = this.value.trim();
+                        if (!val) {
+                            this.classList.remove('correct', 'wrong', 'prefix-ok');
+                            feedback.textContent = '';
+                            return;
+                        }
+                        const correct = task.word.toLowerCase();
+                        const inputLower = val.toLowerCase();
+
+                        if (inputLower === correct) {
+                            this.classList.remove('wrong', 'prefix-ok');
+                            this.classList.add('correct');
+                            feedback.textContent = '✅ Правильно!';
+                            feedback.style.color = '#27ae60';
+                            const idx = mixedState.pending.indexOf(task.ref);
+                            if (idx !== -1) mixedState.pending.splice(idx, 1);
+                            mixedState.score++;
+                            answered = true;
+                            showWordCardByWord(task.ref);
+                            setTimeout(() => {
+                                closeModal();
+                                mixedState.taskIndex++;
+                                renderMixedGame();
+                            }, 1500);
+                        } else if (correct.startsWith(inputLower)) {
+                            this.classList.remove('wrong', 'correct');
+                            this.classList.add('prefix-ok');
+                            feedback.textContent = '👍 продолжай...';
+                            feedback.style.color = '#f1c40f';
+                        } else {
+                            this.classList.remove('correct', 'prefix-ok');
+                            this.classList.add('wrong');
+                            feedback.textContent = '❌ ошибка в букве';
+                            feedback.style.color = '#e74c3c';
+                        }
+                    });
+
+                    document.getElementById('skipMixed')?.addEventListener('click', function() {
+                        if (answered) return;
+                        showWordCardByWord(task.ref);
+                        const idx = mixedState.pending.indexOf(task.ref);
+                        if (idx !== -1) {
+                            mixedState.pending.splice(idx, 1);
+                            mixedState.pending.push(task.ref);
+                        }
+                        answered = true;
+                        setTimeout(() => {
+                            closeModal();
+                            mixedState.taskIndex++;
+                            renderMixedGame();
+                        }, 1500);
+                    });
+
+                } else if (task.type === 'build') {
+                    const letters = task.word.split('');
+                    const shuffledLetters = shuffleArray(letters.slice());
+                    let tiles = shuffledLetters.map(ch => ({ char: ch, placed: false }));
+                    let currentBuild = [];
+                    let answered = false;
+
+                    const renderBuild = () => {
+                        const buildContainer = content;
+                        let buildHtml = `
+                            <div class="build-container">
+                                <div class="build-translation">Перевод: ${task.translation}</div>
+                                <div class="build-prompt">Соберите слово из букв</div>
+                                <div class="build-current" id="mixedBuildCurrent">${currentBuild.join('')}</div>
+                                <div class="build-tiles" id="mixedBuildTiles"></div>
+                                <div class="build-controls">
+                                    <button class="btn-reset" id="mixedBuildReset">🔄 Сбросить</button>
+                                </div>
+                                <div class="build-feedback" id="mixedBuildFeedback"></div>
+                            </div>
+                        `;
+                        buildContainer.innerHTML = buildHtml;
+
+                        const tilesContainer = document.getElementById('mixedBuildTiles');
+                        const currentDisplay = document.getElementById('mixedBuildCurrent');
+                        const feedback = document.getElementById('mixedBuildFeedback');
+
+                        const currentStr = currentBuild.join('');
+                        const correct = task.word;
+                        if (currentStr.length > 0) {
+                            if (currentStr.toLowerCase() === correct.toLowerCase()) {
+                                if (!answered) {
+                                    feedback.textContent = '✅ Правильно!';
+                                    feedback.style.color = '#27ae60';
+                                    const idx = mixedState.pending.indexOf(task.ref);
+                                    if (idx !== -1) mixedState.pending.splice(idx, 1);
+                                    mixedState.score++;
+                                    answered = true;
+                                    showWordCardByWord(task.ref);
+                                    setTimeout(() => {
+                                        closeModal();
+                                        mixedState.taskIndex++;
+                                        renderMixedGame();
+                                    }, 1500);
+                                }
+                            } else if (correct.toLowerCase().startsWith(currentStr.toLowerCase())) {
+                                feedback.textContent = '👍 продолжай...';
+                                feedback.style.color = '#f1c40f';
+                            } else {
+                                if (!answered) {
+                                    feedback.textContent = '❌ ошибка в букве';
+                                    feedback.style.color = '#e74c3c';
+                                    const tiles = tilesContainer.querySelectorAll('.build-tile');
+                                    let lastPlacedIdx = -1;
+                                    for (let i = tiles.length - 1; i >= 0; i--) {
+                                        if (tiles[i].dataset.placed === 'true') {
+                                            lastPlacedIdx = i;
+                                            break;
+                                        }
+                                    }
+                                    if (lastPlacedIdx !== -1) {
+                                        const tileEl = tiles[lastPlacedIdx];
+                                        tileEl.classList.add('wrong');
+                                        setTimeout(() => {
+                                            if (currentBuild.length > 0) {
+                                                const removed = currentBuild.pop();
+                                                for (let i = tiles.length - 1; i >= 0; i--) {
+                                                    if (tiles[i].dataset.placed === 'true' && tiles[i].textContent === removed) {
+                                                        tiles[i].dataset.placed = 'false';
+                                                        break;
+                                                    }
+                                                }
+                                                renderBuild();
+                                            }
+                                        }, 400);
+                                    }
+                                }
+                            }
+                        } else {
+                            if (!answered) feedback.textContent = '';
+                        }
+
+                        if (!answered) {
+                            tilesContainer.innerHTML = '';
+                            tiles.forEach((tile, index) => {
+                                const div = document.createElement('div');
+                                div.className = `build-tile ${tile.placed ? 'placed' : ''}`;
+                                div.textContent = tile.char;
+                                div.dataset.index = index;
+                                div.dataset.placed = tile.placed ? 'true' : 'false';
+                                if (!tile.placed && !answered) {
+                                    div.addEventListener('click', function() {
+                                        const idx = parseInt(this.dataset.index, 10);
+                                        if (!tiles[idx].placed && !answered) {
+                                            tiles[idx].placed = true;
+                                            currentBuild.push(tiles[idx].char);
+                                            renderBuild();
+                                        }
+                                    });
+                                }
+                                tilesContainer.appendChild(div);
+                            });
+
+                            currentDisplay.style.cursor = 'pointer';
+                            currentDisplay.onclick = function() {
+                                if (!answered && currentBuild.length > 0) {
+                                    const removed = currentBuild.pop();
+                                    for (let i = tiles.length - 1; i >= 0; i--) {
+                                        if (tiles[i].placed && tiles[i].char === removed) {
+                                            tiles[i].placed = false;
+                                            break;
+                                        }
+                                    }
+                                    renderBuild();
+                                }
+                            };
+
+                            document.getElementById('mixedBuildReset')?.addEventListener('click', function() {
+                                if (!answered) {
+                                    tiles.forEach(t => t.placed = false);
+                                    currentBuild = [];
+                                    renderBuild();
+                                }
+                            });
+                        }
+                    };
+
+                    renderBuild();
+
+                    document.getElementById('skipMixed')?.addEventListener('click', function() {
+                        if (answered) return;
+                        showWordCardByWord(task.ref);
+                        const idx = mixedState.pending.indexOf(task.ref);
+                        if (idx !== -1) {
+                            mixedState.pending.splice(idx, 1);
+                            mixedState.pending.push(task.ref);
+                        }
+                        answered = true;
+                        setTimeout(() => {
+                            closeModal();
+                            mixedState.taskIndex++;
+                            renderMixedGame();
+                        }, 1500);
+                    });
+                }
+            }
+
+            // ========== Переключение вкладок ==========
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    const tab = this.dataset.tab;
+                    if (tab === 'dictionary') {
+                        tabDictionary.classList.add('active');
+                        tabStudy.classList.remove('active');
+                    } else {
+                        tabDictionary.classList.remove('active');
+                        tabStudy.classList.add('active');
+                        initStudy();
+                    }
+                });
+            });
+
+            // ========== Переключение режимов изучения ==========
+            studyModeBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const mode = this.dataset.mode;
+                    showStudyMode(mode);
+                });
+            });
+
+            // ========== Обработчики событий ==========
+            addBtn.addEventListener('click', addWord);
+            wordInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (translationInput.value.trim()) {
+                        addWord();
+                    } else {
+                        translationInput.focus();
+                    }
+                }
+            });
+            translationInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addWord();
+                }
+            });
+
+            wordInput.addEventListener('input', function() {
+                const raw = this.value.trim();
+                if (!raw) {
+                    this.classList.remove('duplicate', 'success');
+                    hideMessage();
+                    return;
+                }
+                if (isDuplicate(raw, -1)) {
+                    this.classList.remove('success');
+                    this.classList.add('duplicate');
+                    if (!messageEl.classList.contains('show')) {
+                        showMessage(`«${raw}» уже есть в словаре`, 'error', '🔁');
+                    }
+                } else {
+                    this.classList.remove('duplicate');
+                    if (messageEl.classList.contains('error') && messageEl.classList.contains('show')) {
+                        hideMessage();
+                    }
+                }
+            });
+
+            // Модальное окно карточки
+            modalClose.addEventListener('click', closeModal);
+            modalOverlay.addEventListener('click', function(e) {
+                if (e.target === this) closeModal();
+            });
+            modalSpeakBtn.addEventListener('click', function() {
+                const word = this.dataset.word;
+                if (word) speakWord(word);
+            });
+
+            // Модальное окно редактирования
+            editModalClose.addEventListener('click', closeEditModal);
+            editCancel.addEventListener('click', closeEditModal);
+            editModal.addEventListener('click', function(e) {
+                if (e.target === this) closeEditModal();
+            });
+            editSave.addEventListener('click', saveEdit);
+            editWordInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveEdit();
+                }
+            });
+            editTranslationInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveEdit();
+                }
+            });
+            editWordInput.addEventListener('input', function() {
+                this.classList.remove('duplicate');
+                editError.textContent = '';
+            });
+
+            // ========== Инициализация ==========
+            loadWords();
+            renderList();
+            wordInput.focus();
+
+            if (words.length === 0) {
+                setTimeout(() => {
+                    showMessage('Добавьте первую пару (слово и перевод)', 'info', '👋');
+                }, 400);
+            } else {
+                setTimeout(() => {
+                    showMessage(`В словаре ${words.length} слов`, 'info', '📖');
+                }, 400);
+            }
+
+            console.log('📚 LinguaBoost с редактированием слов загружен!');
+
+        })();
+    </script>
+
+</body>
+</html>
